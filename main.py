@@ -1,94 +1,47 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from sklearn.datasets import load_digits
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import accuracy_score, confusion_matrix
-from descente_stochastique import GradientDescent
-import matplotlib.pyplot as plt
+from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay
+from sklearn.linear_model import LogisticRegression
 
-# Charger le dataset
+# Charger les données digits
 digits = load_digits()
-X = digits.data  # Images aplaties (64 features par image)
-y = digits.target  # Labels (chiffres de 0 à 9)
+X, y = digits.data, digits.target
 
 # Normalisation des données
 scaler = StandardScaler()
 X = scaler.fit_transform(X)
 
-# Partitionner les données en ensemble d'entraînement et de test
+# Partition des données en ensembles d'entraînement et de test
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Fonction sigmoïde
-def sigmoid(z):
-    return 1 / (1 + np.exp(-z))
+# Entraîner un modèle de régression logistique
+clf = LogisticRegression(max_iter=500, solver='lbfgs', multi_class='multinomial')
+clf.fit(X_train, y_train)
 
-# Entraîner un modèle pour chaque classe avec OvR
-def train_one_vs_rest(X_train, y_train, num_classes, gradient_descent):
-    """
-    Entraîne un modèle pour chaque classe en utilisant l'approche One-vs-Rest.
-    Retourne un tableau contenant les paramètres optimaux pour chaque classe.
-    """
-    models = []
-    for class_label in range(num_classes):
-        print(f"Entraînement pour la classe {class_label}...")
-        # Créer un problème binaire : 1 pour la classe actuelle, 0 sinon
-        y_binary = (y_train == class_label).astype(int)
-        
-        # Initialiser les paramètres
-        initial_theta = np.zeros(X_train.shape[1])
-        
-        # Entraîner avec la descente de gradient
-        theta_optimal = gradient_descent.descent(initial_theta, data=list(zip(X_train, y_binary)))
-        models.append(theta_optimal)
-    return np.array(models)
+# Prédictions
+test_preds = clf.predict(X_test)
 
-# Prédire les classes en utilisant les modèles OvR
-def predict_one_vs_rest(X, models):
-    """
-    Prédire les classes des échantillons X en utilisant les modèles OvR.
-    """
-    scores = np.array([sigmoid(X @ theta) for theta in models])  # Probabilités pour chaque classe
-    return np.argmax(scores, axis=0)  # Classe avec la probabilité maximale
-
-# Initialiser la descente de gradient
-gd = GradientDescent(
-    gradient=lambda theta, data: np.mean([(x * (x @ theta - y)) for x, y in data], axis=0),
-    learning_rate=0.01,
-    max_iterations=1000,
-    epsilon=1e-6,
-    batch_size=10
-)
-
-# Nombre de classes (0 à 9)
-num_classes = 10
-
-# Entraîner les modèles
-models = train_one_vs_rest(X_train, y_train, num_classes, gd)
-
-# Faire des prédictions sur l'ensemble de test
-y_pred = predict_one_vs_rest(X_test, models)
-
-# Évaluer les performances
-accuracy = accuracy_score(y_test, y_pred)
-print(f"Précision sur l'ensemble de test : {accuracy * 100:.2f}%")
+# Évaluation
+test_accuracy = accuracy_score(y_test, test_preds)
+print(f"Précision sur l'ensemble de test : {test_accuracy:.4f}")
 
 # Matrice de confusion
-conf_matrix = confusion_matrix(y_test, y_pred)
-print("Matrice de confusion :\n", conf_matrix)
+conf_matrix = confusion_matrix(y_test, test_preds)
+ConfusionMatrixDisplay(conf_matrix, display_labels=clf.classes_).plot(cmap='viridis')
+plt.title("Matrice de confusion")
+plt.show()
 
-# Visualisation des échantillons mal classés
-def plot_misclassified_images(X, y_true, y_pred, n_images=10):
-    """
-    Affiche les images mal classées.
-    """
-    misclassified = np.where(y_true != y_pred)[0]
-    plt.figure(figsize=(10, 10))
-    for i, idx in enumerate(misclassified[:n_images]):
-        plt.subplot(1, n_images, i + 1)
-        plt.imshow(X[idx].reshape(8, 8), cmap='gray')
-        plt.title(f"Vrai: {y_true[idx]}\nPrédit: {y_pred[idx]}")
-        plt.axis('off')
-    plt.show()
-
-# Afficher les 10 premières images mal classées
-plot_misclassified_images(X_test, y_test, y_pred)
+# Affichage des prédictions pour quelques chiffres
+fig, axes = plt.subplots(2, 5, figsize=(10, 5))
+for i, ax in enumerate(axes.ravel()):
+    ax.imshow(X_test[i].reshape(8, 8), cmap='gray')
+    ax.axis('off')
+    pred_label = test_preds[i]
+    true_label = y_test[i]
+    color = 'green' if pred_label == true_label else 'red'
+    ax.set_title(f"Préd: {pred_label}\nVrai: {true_label}", color=color)
+plt.tight_layout()
+plt.show()
