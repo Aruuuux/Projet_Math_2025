@@ -60,6 +60,29 @@ train_accuracy = np.mean(train_preds == y_train)
 test_accuracy = np.mean(test_preds == y_test)
 print(f"Précision sur l'ensemble de test (implémentation personnalisée) : {test_accuracy:.4f}")
 
+# Matrice de confusion
+conf_matrix = np.zeros((num_classes, num_classes), dtype=int)
+for true, pred in zip(y_test, test_preds):
+    conf_matrix[true, pred] += 1
+
+# Affichage de la matrice de confusion
+fig, ax = plt.subplots(figsize=(10, 10))
+cax = ax.matshow(conf_matrix, cmap='viridis')
+plt.title("Confusion Matrix", pad=20)
+plt.xlabel("Predicted labels")
+plt.ylabel("True labels")
+plt.colorbar(cax)
+plt.xticks(np.arange(num_classes), labels=np.arange(num_classes))
+plt.yticks(np.arange(num_classes), labels=np.arange(num_classes))
+
+# Ajouter les valeurs dans la matrice
+for i in range(num_classes):
+    for j in range(num_classes):
+        plt.text(j, i, str(conf_matrix[i, j]), ha='center', va='center', 
+                 color='black' if conf_matrix[i, j] > np.max(conf_matrix) / 2 else 'white', fontsize=12)
+
+plt.show()
+
 # Affichage des prédictions pour quelques chiffres
 fig, axes = plt.subplots(2, 5, figsize=(10, 5))
 for i, ax in enumerate(axes.ravel()):

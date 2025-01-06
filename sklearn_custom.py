@@ -31,7 +31,7 @@ print(f"Précision sur l'ensemble de test : {test_accuracy:.4f}")
 # Matrice de confusion
 conf_matrix = confusion_matrix(y_test, test_preds)
 ConfusionMatrixDisplay(conf_matrix, display_labels=clf.classes_).plot(cmap='viridis')
-plt.title("Matrice de confusion")
+plt.title("Confusion matrix")
 plt.show()
 
 # Affichage des prédictions pour quelques chiffres
