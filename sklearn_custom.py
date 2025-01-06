@@ -35,7 +35,7 @@ plt.title("Confusion matrix")
 plt.show()
 
 # Affichage des prédictions pour quelques chiffres
-fig, axes = plt.subplots(2, 5, figsize=(10, 5))
+fig, axes = plt.subplots(5, 5, figsize=(10, 5))
 for i, ax in enumerate(axes.ravel()):
     ax.imshow(X_test[i].reshape(8, 8), cmap='gray')
     ax.axis('off')
