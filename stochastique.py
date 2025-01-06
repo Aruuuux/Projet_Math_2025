@@ -4,6 +4,8 @@ from sklearn.datasets import load_digits
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from descente_stochastique import GradientDescent
+from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay
+
 
 def sigmoid(z):
     z = np.clip(z, -500, 500)  # Limite les valeurs pour éviter le débordement
@@ -52,16 +54,19 @@ gd = GradientDescent(gradient=wrapped_gradient, learning_rate=learning_rate, max
 weights = gd.descent(initial_weights, data)
 
 # Prédictions (argmax sur les probabilités pour chaque classe)
-train_preds = np.argmax(sigmoid(np.dot(X_train, weights)), axis=1)
 test_preds = np.argmax(sigmoid(np.dot(X_test, weights)), axis=1)
 
 # Évaluation
-train_accuracy = np.mean(train_preds == y_train)
 test_accuracy = np.mean(test_preds == y_test)
 print(f"Précision sur l'ensemble de test (implémentation personnalisée) : {test_accuracy:.4f}")
 
+conf_matrix = confusion_matrix(y_test, test_preds)
+ConfusionMatrixDisplay(conf_matrix).plot(cmap='viridis')
+plt.title("Matrice de confusion")
+plt.show()
+
 # Affichage des prédictions pour quelques chiffres
-fig, axes = plt.subplots(2, 5, figsize=(10, 5))
+fig, axes = plt.subplots(5, 5, figsize=(10, 10))
 for i, ax in enumerate(axes.ravel()):
     ax.imshow(X_test[i, 1:].reshape(8, 8), cmap='gray')
     ax.axis('off')
